@@ -12,7 +12,6 @@ void main() async {
     exit(1);
   }
 
-  print('Reading master image from $masterPath...');
   final masterBytes = masterFile.readAsBytesSync();
   final masterImg = img.decodeImage(masterBytes);
   if (masterImg == null) {
@@ -20,7 +19,6 @@ void main() async {
     exit(1);
   }
 
-  print('Master image decoded: ${masterImg.width}x${masterImg.height}');
 
   // Save source in assets/icons
   final assetsDir = Directory('assets/icons');
@@ -28,7 +26,6 @@ void main() async {
     assetsDir.createSync(recursive: true);
   }
   File('assets/icons/app_icon.png').writeAsBytesSync(img.encodePng(masterImg));
-  print('Saved assets/icons/app_icon.png');
 
   // Helper to write resized PNG
   void writePng(String outPath, int size) {
@@ -43,11 +40,9 @@ void main() async {
       file.parent.createSync(recursive: true);
     }
     file.writeAsBytesSync(img.encodePng(resized));
-    print('Generated $outPath (${size}x$size)');
   }
 
   // 1. Android Mipmap Icons
-  print('\nGenerating Android icons...');
   final androidSizes = {
     'android/app/src/main/res/mipmap-mdpi/ic_launcher.png': 48,
     'android/app/src/main/res/mipmap-hdpi/ic_launcher.png': 72,
@@ -60,7 +55,6 @@ void main() async {
   }
 
   // 2. iOS AppIcon.appiconset
-  print('\nGenerating iOS icons...');
   const iosDir = 'ios/Runner/Assets.xcassets/AppIcon.appiconset';
   final iosSizes = {
     '$iosDir/Icon-App-20x20@1x.png': 20,
@@ -84,7 +78,6 @@ void main() async {
   }
 
   // 3. macOS AppIcon.appiconset
-  print('\nGenerating macOS icons...');
   const macDir = 'macos/Runner/Assets.xcassets/AppIcon.appiconset';
   final macSizes = {
     '$macDir/app_icon_16.png': 16,
@@ -100,7 +93,6 @@ void main() async {
   }
 
   // 4. Web icons
-  print('\nGenerating Web icons...');
   final webSizes = {
     'web/favicon.png': 32,
     'web/icons/Icon-192.png': 192,
@@ -113,14 +105,11 @@ void main() async {
   }
 
   // 5. Windows app_icon.ico
-  print('\nGenerating Windows app_icon.ico...');
   final icoSizes = [16, 32, 48, 64, 128, 256];
   final icoBytes = _createIcoFile(masterImg, icoSizes);
   final icoFile = File('windows/runner/resources/app_icon.ico');
   icoFile.writeAsBytesSync(icoBytes);
-  print('Generated windows/runner/resources/app_icon.ico (${icoSizes.join(", ")})');
 
-  print('\nAll platform app icons successfully generated!');
 }
 
 Uint8List _createIcoFile(img.Image masterImg, List<int> sizes) {
