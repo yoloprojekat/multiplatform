@@ -265,11 +265,18 @@ class RobotController extends ChangeNotifier {
       },
       onFrame: _handleNewFrame,
       onError: (err) {
-        _telemetry = _telemetry.copyWith(
-          connectionStatus: RobotConnectionStatus.disconnected,
-          lastError: err,
-          streamFps: 0.0,
-        );
+        if (!_stream.isActive) {
+          _telemetry = _telemetry.copyWith(
+            connectionStatus: RobotConnectionStatus.disconnected,
+            lastError: err,
+            streamFps: 0.0,
+          );
+        } else {
+          // Seamlessly auto-reconnecting in background (bypassing 5-minute limit)
+          _telemetry = _telemetry.copyWith(
+            lastError: err,
+          );
+        }
         notifyListeners();
       },
     );

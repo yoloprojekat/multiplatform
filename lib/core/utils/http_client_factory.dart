@@ -7,6 +7,7 @@ import 'http_client_factory_stub.dart'
 /// (e.g. 2.5s) to prevent hanging for 60 seconds on unresolved or unreachable LAN hosts.
 http.Client createHttpClient({
   Duration timeout = const Duration(milliseconds: 2500),
+  Duration? idleTimeout,
 }) {
-  return createPlatformHttpClient(timeout: timeout);
+  return createPlatformHttpClient(timeout: timeout, idleTimeout: idleTimeout);
 }

@@ -20,7 +20,8 @@ class RobotConstants {
   static const Duration commandKeepAliveInterval = Duration(milliseconds: 1500);
   static const Duration autopilotDriveDuration = Duration(milliseconds: 1500);
   static const Duration autopilotPauseDuration = Duration(milliseconds: 500);
-  static const Duration streamThrottleInterval = Duration(milliseconds: 80);
+  static const Duration streamThrottleInterval = Duration.zero;
+  static const Duration streamReconnectDelay = Duration(milliseconds: 100);
   static const Duration pingCheckInterval = Duration(seconds: 4);
 
   // Joystick Thresholds

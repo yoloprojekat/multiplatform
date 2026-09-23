@@ -23,10 +23,10 @@ class MockRobotService {
     stopMockStream();
     onConnected();
 
-    _streamTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+    _streamTimer = Timer.periodic(const Duration(milliseconds: 33), (timer) {
       _frameIndex++;
       final frameBytes = _generateMockFrame(_frameIndex);
-      onFrame(frameBytes, 10.0);
+      onFrame(frameBytes, 30.0);
     });
   }
 
