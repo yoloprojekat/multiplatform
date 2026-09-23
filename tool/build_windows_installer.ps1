@@ -52,7 +52,8 @@ if (-not $Version) {
 Write-Host "» Target Version: $Version" -ForegroundColor Green
 
 # 2. Locate Inno Setup Compiler (ISCC.exe)
-$IsccCandidate = (Get-Command iscc -ErrorAction SilentlyContinue)?.Source
+$CommandResult = Get-Command iscc -ErrorAction SilentlyContinue
+$IsccCandidate = if ($CommandResult) { $CommandResult.Source } else { $null }
 if (-not $IsccCandidate) {
     $KnownPaths = @(
         "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
