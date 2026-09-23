@@ -61,6 +61,8 @@ class RobotController extends ChangeNotifier {
   void _init() {
     _startCommandLoop();
     _startPingMonitor();
+    // Immediate connection check on launch (don't wait 4s)
+    unawaited(_checkPingNow());
   }
 
   void setSimulatorMode(bool enable) {
@@ -82,6 +84,7 @@ class RobotController extends ChangeNotifier {
       if (_telemetry.isCamOn) {
         _startHttpStream();
       }
+      unawaited(_checkPingNow());
     }
     notifyListeners();
   }
@@ -91,7 +94,51 @@ class RobotController extends ChangeNotifier {
     if (!_isSimulatorMode && _telemetry.isCamOn) {
       _startHttpStream();
     }
+    unawaited(_checkPingNow());
     notifyListeners();
+  }
+
+  /// Fast parallel scan across common vehicle host addresses:
+  /// mDNS (`pametno-vozilo.local`), Pi AP (`192.168.4.1`), direct IP (`192.168.1.105`), and localhost.
+  /// Connects within <= 2 seconds to whichever answers first.
+  Future<String?> fastScanAndConnect() async {
+    if (_isSimulatorMode) return 'Simulator Active';
+
+    _telemetry = _telemetry.copyWith(connectionStatus: RobotConnectionStatus.connecting);
+    notifyListeners();
+
+    final candidates = <String>{
+      _api.baseUrl,
+      RobotConstants.defaultHost,
+      'http://192.168.4.1:1607',
+      'http://192.168.1.105:1607',
+      'http://localhost:1607',
+      'http://10.0.2.2:1607',
+    }.toList();
+
+    final result = await _api.fastProbeCandidates(candidates);
+
+    if (result != null) {
+      _api.updateBaseUrl(result.host);
+      _telemetry = _telemetry.copyWith(
+        connectionStatus: RobotConnectionStatus.connected,
+        latencyMs: result.latencyMs,
+        lastError: null,
+      );
+      if (_telemetry.isCamOn) {
+        await _startHttpStream();
+      }
+      notifyListeners();
+      return result.host;
+    } else {
+      _telemetry = _telemetry.copyWith(
+        connectionStatus: RobotConnectionStatus.disconnected,
+        latencyMs: null,
+        lastError: 'No vehicle responded on scanned addresses',
+      );
+      notifyListeners();
+      return null;
+    }
   }
 
   // --- Movement Commands ---

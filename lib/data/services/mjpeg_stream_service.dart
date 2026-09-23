@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../../core/constants/robot_constants.dart';
+import '../../core/utils/http_client_factory.dart';
 import '../../core/utils/mjpeg_decoder.dart';
 
 typedef OnFrameCallback = void Function(Uint8List frameBytes, double fps);
@@ -9,7 +10,8 @@ typedef OnStreamErrorCallback = void Function(String error);
 typedef OnStreamConnectedCallback = void Function();
 
 class MjpegStreamService {
-  MjpegStreamService({http.Client? client}) : _client = client ?? http.Client();
+  MjpegStreamService({http.Client? client})
+      : _client = client ?? createHttpClient(timeout: const Duration(seconds: 3));
 
   final http.Client _client;
   final MjpegDecoder _decoder = MjpegDecoder();
@@ -39,7 +41,12 @@ class MjpegStreamService {
     try {
       final uri = Uri.parse('$baseUrl${RobotConstants.videoFeedPath}');
       final request = http.Request('GET', uri);
-      final response = await _client.send(request);
+      final response = await _client.send(request).timeout(
+        const Duration(milliseconds: 3500),
+        onTimeout: () => throw TimeoutException('Connection to video stream timed out (3.5s)'),
+      );
+
+      if (!_isActive) return;
 
       if (response.statusCode != 200) {
         _isActive = false;
@@ -79,7 +86,10 @@ class MjpegStreamService {
           onError('Stream interrupted: $err');
         },
         onDone: () {
-          _isActive = false;
+          if (_isActive) {
+            _isActive = false;
+            onError('Video feed disconnected');
+          }
         },
         cancelOnError: true,
       );
