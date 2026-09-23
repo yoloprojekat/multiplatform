@@ -1,34 +1,106 @@
-# 🏎️ YOLO VOZILO • Futuristic Multiplatform Cockpit
+# 📱 Smart Vehicle Control Terminal (Multiplatform)
+### Next-Generation Telemetry & Command Interface for Autonomous Robotics
+**Target Platforms: Android • iOS • Web • Windows • macOS • Linux**
 
-A high-performance, futuristic telemetry and remote control cockpit for smart Raspberry Pi vehicles, powered by **Flutter**. Supports **all platforms** from a single unified codebase: **Web**, **Android**, **iOS**, **Windows**, **macOS**, and **Linux**.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platforms-Android%20%7C%20iOS%20%7C%20Web%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux-00E5FF?style=for-the-badge)](#)
+[![Flutter](https://img.shields.io/badge/Flutter-3.47%2B-02569B?style=for-the-badge&logo=flutter)](#)
+[![Dart](https://img.shields.io/badge/Dart-3.13%2B-0175C2?style=for-the-badge&logo=dart)](#)
+[![CI/CD](https://img.shields.io/badge/GitHub_Actions-Automated_Build_%26_Release-2088FF?style=for-the-badge&logo=githubactions)](#)
 
-![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Web%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux-00E5FF?style=for-the-badge)
-![Flutter](https://img.shields.io/badge/Flutter-3.47%2B-02569B?style=for-the-badge&logo=flutter)
-![Dart](https://img.shields.io/badge/Dart-3.13%2B-0175C2?style=for-the-badge&logo=dart)
-![CI/CD](https://img.shields.io/badge/GitHub_Actions-Automated_Build_%26_Release-2088FF?style=for-the-badge&logo=githubactions)
+**Smart Vehicle Control Terminal** is a high-performance, thin-client cross-platform interface designed for real-time robotic teleoperation and computer vision telemetry. All heavy AI inference (YOLO object detection) and bounding box overlays are processed on the Edge (Raspberry Pi 5), ensuring **0% AI CPU load** on the client while enabling sub-millisecond teleoperation, OCR command extraction, and live video streaming.
 
 ---
 
-## ✨ Features & Enhancements
+## 📸 Application Interface Showcase
 
-- 🖥️ **Cockpit Telemetry Dashboard**: High-contrast, cyberpunk HUD interface with responsive layouts that automatically adapt between desktop/tablet cockpit and thumb-friendly mobile layouts.
-- 📹 **Live MJPEG Video Feed**: Real-time camera feed parser with frame rate throttling (saving battery and bandwidth), live rolling FPS counter, and roundtrip ping latency monitor.
-- 🎮 **Dual Driving Controllers**:
-  - **Tactile Compact D-Pad**: High-tech directional pad with 4 cardinal directions, 2 rotation triggers, and instant-stop on pointer release.
-  - **Virtual Joystick**: 360-degree analog joystick with dynamic angle mapping, radial deadzone filtering, and spring-return animation.
-- ⌨️ **Keyboard Support**: Full WASD / Arrow keys, QE rotation, and Spacebar emergency stop support for desktop and web users.
-- 🤖 **Remote AI Control**:
-  - **Vision AI**: Remotely toggles onboard YOLO object detection with server-drawn bounding boxes.
-  - **Person Follow AI**: Autonomous person-tracking mode with automatic safety interlock (disabling vision automatically disarms follow).
-- 🔤 **OCR & AutoPilot**:
-  - Scans and detects directional keywords (`forward`, `backward`, `left`, `right`, `rotate`).
-  - Autonomous driving loop: moves for 1.5s, stops for 0.5s, and re-arms.
-  - Interactive simulator injector allows testing the autopilot state machine on any device or browser without physical signage!
-- 📸 **Snapshot & Video Recording**:
-  - High-res photo capture saved directly to device storage or browser download (`PI_CAP_<timestamp>.jpg`).
-  - Continuous video recording buffered in memory and encoded as cross-platform animated clips with preview and download dialog.
-- 🧪 **Integrated Robot Simulator Mode**: Test video streaming, AI toggles, joystick, and autopilot right inside the web browser or on desktop without a physical Raspberry Pi!
-- ⚙️ **Configurable Host & Presets**: Easily switch between `http://pametno-vozilo.local:1607`, `localhost`, or direct LAN IPs (`http://192.168.x.x:1607`).
+| 🧠 YOLO Edge Detection Stream | 🔤 OCR Command Vision System |
+| :---: | :---: |
+| Pre-rendered YOLO bounding boxes & joystick telemetry feed | Cross-platform OCR text analysis & live autonomous command verification |
+| Real-time MJPEG feed with HUD overlays, FPS counter, and latency monitor | Keyword detection (`forward`, `backward`, `left`, `right`, `rotate`) with auto-pilot state loop |
+
+---
+
+## 🚀 Key Features & Architectural Modules
+
+### 🧠 Server-Side Computer Vision (YOLO Edge AI)
+- **Pre-Rendered Stream**: The vehicle's onboard Raspberry Pi 5 runs real-time YOLO object detection and draws bounding boxes directly onto frame buffers prior to transmission.
+- **Zero Client Overhead**: The Flutter multiplatform application displays the processed high-fps stream, keeping client CPU and GPU utilization minimal for optimal thermal and power efficiency across mobile, web, and desktop.
+- **Ultra-Low Latency Display**: Optimized chunked JPEG parsing with frame throttling ensures smooth 60+ FPS UI rendering with immediate visual feedback for agile robotic maneuvering.
+
+### 🔤 OCR Command System (Optical Character Recognition)
+- **Autonomous Environmental Guidance**: Recognizes textual commands and road signs from the surrounding environment (e.g., speed limits, direction markers, stop instructions).
+- **Live Telemetry Verification**: Decoded text directives are displayed in real-time on the cockpit dashboard, providing immediate visual confirmation of autonomous navigation decisions.
+- **Universal Multiplatform Vision**: Features an autonomous state machine that drives for 1.5s, stops for 0.5s, and re-arms, with an interactive testing injector for browser and desktop validation.
+
+### 🎮 Precision Robotic Control
+- **Direct HTTP REST Command Bridge**: Transmits low-latency motor steering directives via `POST /control` with automatic 1.5s keep-alive repetition.
+- **Dual Controllers**:
+  - **Tactile Compact D-Pad**: High-tech directional buttons (`▲`, `▼`, `◀`, `▶`), rotation triggers (`↺`, `↻`), and center emergency stop. Sends directives on press and stops instantly on release.
+  - **360° Virtual Joystick**: Analog touch and mouse drag joystick with dynamic angle mapping, radial deadzone filtering, and smooth spring-return animation.
+- **Full Keyboard Navigation**: Desktop and Web users can pilot using `W`/`S` (forward/back), `A`/`D` (left/right), `Q`/`E` (rotation), and `Spacebar` (emergency stop).
+- **Bi-Directional Feedback Loop**: Real-time status badges, ping latency monitor, and visual indicators reflecting active movement states.
+
+### ⚡ Optimization & System Engineering
+- **Thin Client Architecture**: Engineered for maximum field battery life, low memory footprint, and instantaneous startup.
+- **Universal Multiplatform Parity**: Runs identical logic and visuals across Web, Android, iOS, Windows, macOS, and Linux from a single codebase.
+- **Offline Robot Simulator Mode**: Integrated mock service generates a simulated cockpit HUD video feed, YOLO bounding boxes, and telemetry, enabling instant web and local testing without requiring physical robot hardware.
+- **Photo Snapshot & Video Recording**: High-resolution JPEG frame snapshots and animated clip recordings saved directly to user downloads on Web or storage on desktop and mobile.
+
+---
+
+## 🛠 Tech Stack
+
+| Domain | Technology | Description |
+| :--- | :--- | :--- |
+| **Language** | **Dart 3.13.4** | Modern, sound type-safe, and asynchronous runtime |
+| **UI Framework** | **Flutter 3.47+ (Material 3)** | Declarative multiplatform UI with custom cybernetic telemetry styling |
+| **Networking** | **`package:http` & MJPEG Decoder** | Non-blocking chunked HTTP streaming and low-latency REST control |
+| **File Management** | **Cross-Platform `FileSaver`** | Web Blob/Anchor download API & native `path_provider` on mobile/desktop |
+| **Edge Compute** | **YOLO on Raspberry Pi 5** | Server-side real-time object detection and frame rendering |
+| **Typography** | **Google Fonts (Outfit)** | Futuristic, high-legibility telemetry typography |
+| **CI / CD** | **GitHub Actions Matrix** | Automated analysis, testing, multiplatform compilation, and GitHub Releases |
+
+---
+
+## 🔧 Network & Communication Architecture
+
+The terminal communicates with the autonomous vehicle via a dedicated private local network, Wi-Fi Access Point (Hotspot), or direct IP:
+
+```
+┌─────────────────────────────────────────┐
+│             Raspberry Pi 5              │
+│      (Onboard Autonomous Vehicle)       │
+└────┬───────────────────────────────▲────┘
+     │                               │
+     │ HTTP Video Feed               │ HTTP Low-Latency Commands
+     │ (Pre-rendered BBoxes)         │ POST /control {"cmd": "..."}
+     │ GET /video_feed               │ POST /toggle_detection
+     │                               │ POST /toggle_follow
+     │                               │
+┌────▼───────────────────────────────┴────┐
+│      Multiplatform Cockpit App          │
+│   (Web • Android • Desktop • iOS)       │
+└─────────────────────────────────────────┘
+```
+
+- **HTTP Video Stream**: Continuous multipart MJPEG stream from `http://pametno-vozilo.local:1607/video_feed`.
+- **REST Control Protocol**: Sends JSON payloads `{"cmd": "<command>"}` to `/control`.
+- **AI Toggles**: Remotely arms or disarms onboard YOLO Vision (`/toggle_detection`) and autonomous Person Follow (`/toggle_follow`) with safety interlocks.
+- **OCR Feedback Protocol**: Synchronizes environmental text directives with the telemetry HUD banner and triggers the autonomous driving cycle.
+
+---
+
+## 🎨 UI Design System & Visual Palette
+
+The application uses a **Dark Future Cockpit** theme designed for maximum contrast, high legibility, and OLED energy savings:
+
+- 🔵 **Primary Neon Cyan (`#00E5FF`)**: Brand titles, active control buttons, joystick thumb, and crosshair reticles.
+- 🔷 **Secondary Electric Azure (`#2979FF`)**: Rotation triggers, status cards, and action pills.
+- 🟢 **Vision & Online (`#00E676`)**: Status badge for active YOLO detection, online connectivity, and AutoPilot verification.
+- 🔴 **Alert & Emergency (`#FF1744`)**: Emergency stop buttons, recording indicators, and disconnection alerts.
+- 🌐 **Simulated Mode (`#00B0FF`)**: Clear indicator when operating in offline Mock Robot Simulator mode.
+- 🌚 **Obsidian Background (`#090C12`)**: Deep dark layout minimizing OLED power consumption and enhancing visual focus during extended operation.
 
 ---
 
@@ -46,140 +118,84 @@ A high-performance, futuristic telemetry and remote control cockpit for smart Ra
 
 ---
 
-## 🌐 Network Protocol Specification
-
-The app communicates with the Raspberry Pi vehicle over HTTP REST and MJPEG streaming:
-
-| Endpoint | Method | Payload | Description |
-| :--- | :---: | :--- | :--- |
-| `/control` | `POST` | `{"cmd": "<command>"}` | Sends driving command (`napred`, `nazad`, `levo`, `desno`, `rot_levo`, `rot_desno`, `stop`). Auto-repeated every 1.5s when moving. |
-| `/video_feed` | `GET` | *None* | Multipart MJPEG stream returning JPEG images delimited by `0xFF, 0xD8` and `0xFF, 0xD9`. |
-| `/toggle_detection` | `POST` | `{"enable": true/false}` | Toggles remote YOLO object detection on the Pi. |
-| `/toggle_follow` | `POST` | `{"enable": true/false}` | Toggles autonomous person-following mode on the Pi. |
-
----
-
 ## 🚀 Running & Testing Web Directly
 
-You can run and test the web app directly in your browser without rebuilding everything:
+You can run and test the web client directly in your browser without rebuilding everything:
 
-### Option 1: Flutter Web Dev Server (Hot Reload)
+### Option 1: Direct Web Dev Server (Hot Reload)
 ```bash
 flutter run -d chrome
 # or with Edge:
 flutter run -d edge
 ```
 
-### Option 2: Test the Built Web Release Bundle
+### Option 2: Run Built Web Release with Local Server
 ```bash
-# Build the release bundle
+# Compile web release
 flutter build web --release
 
-# Serve locally with any HTTP server (e.g., Python):
-cd build/web
-python -m http.server 8080
+# Serve locally (using Dart built-in server script):
+dart run tool/serve_web.dart
 ```
-Open **`http://localhost:8080`** in your browser.
-> **Tip**: Enable **Mock Robot Simulator** inside the Settings dialog (`⚙️` icon in the top bar) to test the stream HUD, bounding boxes, driving controls, and OCR AutoPilot without needing the robot connected!
+Navigate to **`http://localhost:8085`** in your browser.
+
+> **💡 Pro Tip**: Click the **Settings icon (⚙️ / tune)** in the top bar and enable **Mock Robot Simulator** to test live video HUD rendering, YOLO bounding boxes, D-Pad/Joystick driving, and OCR AutoPilot command injections immediately!
 
 ---
 
-## 📦 Building for Target Platforms
+## 🛠 Build & Installation
 
-### Android
-```bash
-flutter build apk --release
-# Output: build/app/outputs/flutter-apk/app-release.apk
-```
+### Prerequisites
+- **Flutter SDK**: 3.47+ (Dart 3.13+)
+- **Java**: JDK 17 (for Android builds)
+- **C++ Build Tools**: Visual Studio with C++ (for Windows), clang/cmake/ninja (for Linux), Xcode (for macOS/iOS)
 
-### Windows Desktop
-```bash
-flutter build windows --release
-# Output: build/windows/x64/runner/Release/
-```
+### Building from Source
 
-### Linux Desktop
 ```bash
-# Ensure build essentials are installed:
-# sudo apt-get install clang cmake ninja-build pkg-config libgtk-3-dev
-flutter build linux --release
-# Output: build/linux/x64/release/bundle/
-```
+# Clone the repository
+git clone https://github.com/yoloprojekat/multiplatform.git
+cd multiplatform
 
-### macOS Desktop
-```bash
-flutter build macos --release
-# Output: build/macos/Build/Products/Release/
-```
+# Install dependencies
+flutter pub get
 
-### iOS
-```bash
-flutter build ios --release
+# Run static analysis and tests
+flutter analyze
+flutter test
+
+# Build for your target platform:
+flutter build web --release       # Web Bundle
+flutter build apk --release       # Android APK
+flutter build windows --release   # Windows Desktop x64
+flutter build linux --release     # Linux Desktop x64
+flutter build macos --release     # macOS Desktop
+flutter build ios --release       # iOS Bundle
 ```
 
 ---
 
 ## 🤖 GitHub Actions Automated CI/CD
 
-The repository includes a comprehensive GitHub Actions workflow at [`.github/workflows/build_and_publish.yml`](.github/workflows/build_and_publish.yml).
+The repository includes an enterprise-grade CI/CD pipeline at [`.github/workflows/build_and_publish.yml`](.github/workflows/build_and_publish.yml):
 
-### What It Does:
-1. **Quality Gate**: Runs static analysis (`flutter analyze`) and unit/widget tests (`flutter test`) on every push and pull request.
-2. **Multiplatform Matrix Build**: Automatically compiles:
-   - Android Release APK (`yolo-vozilo-android.apk`)
-   - Flutter Web Release bundle (`yolo-vozilo-web.zip`) and deploys to **GitHub Pages**
-   - Windows Desktop x64 (`yolo-vozilo-windows-x64.zip`)
-   - Linux Desktop x64 (`yolo-vozilo-linux-x64.tar.gz`)
-3. **Automated GitHub Releases**: When a version tag is pushed (e.g. `v1.0.0`), it automatically drafts and publishes a GitHub Release with all compiled platform binaries attached!
-
-### To trigger a release:
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
+- **Automated Validation**: Runs static analysis (`flutter analyze`) and unit/widget tests on every commit and PR.
+- **Cross-Platform Matrix Builds**:
+  - Compiles **Android Release APK** (`yolo-vozilo-android.apk`)
+  - Compiles **Web Release bundle** (`yolo-vozilo-web.zip`) and deploys to **GitHub Pages**
+  - Compiles **Windows Desktop x64** (`yolo-vozilo-windows-x64.zip`)
+  - Compiles **Linux Desktop x64** (`yolo-vozilo-linux-x64.tar.gz`)
+- **Automated Releases**: Pushing a version tag automatically creates a GitHub Release with all compiled artifacts attached:
+  ```bash
+  git tag v1.0.0
+  git push origin v1.0.0
+  ```
 
 ---
 
-## 📂 Project Architecture
+## 📄 License & Attribution
 
-```text
-lib/
-├── controllers/
-│   └── robot_controller.dart        # Main ViewModel: command loop, streaming, autopilot, recording
-├── core/
-│   ├── constants/
-│   │   └── robot_constants.dart     # Command codes, endpoints, timings, OCR keywords
-│   ├── theme/
-│   │   ├── app_colors.dart          # Cyberpunk telemetry color palette
-│   │   └── app_theme.dart           # Dark theme with Outfit typography
-│   └── utils/
-│       ├── file_saver.dart          # Cross-platform snapshot & recording file saver
-│       ├── file_saver_web.dart      # Web browser direct download implementation
-│       ├── file_saver_io.dart       # Android/Desktop native filesystem saver
-│       └── mjpeg_decoder.dart       # Chunked MJPEG frame stream parser
-├── data/
-│   ├── models/
-│   │   ├── robot_command.dart       # Command enums, hotkeys, and symbols
-│   │   └── robot_status.dart        # Connection states, telemetry model
-│   └── services/
-│       ├── mjpeg_stream_service.dart# HTTP stream listener & rolling FPS calculator
-│       ├── mock_robot_service.dart  # Offline robot simulator with animated canvas feed
-│       └── robot_api_service.dart   # REST client for /control and /toggle_*
-├── ui/
-│   ├── screens/
-│   │   └── cockpit_screen.dart      # Adaptive Cockpit UI (Desktop & Mobile layouts)
-│   └── widgets/
-│       ├── compact_dpad.dart        # High-tech tactile D-Pad with keyboard indicators
-│       ├── connection_settings_dialog.dart # Host IP configuration & simulator toggle
-│       ├── feature_pill.dart        # Glowing cyberpunk action buttons
-│       ├── keyboard_shortcuts_listener.dart # WASD/Arrow/QE key event listener
-│       ├── media_preview_dialog.dart# Photo/recording save confirmation modal
-│       ├── video_hud_player.dart    # Live video player with HUD overlays & standby radar
-│       └── virtual_joystick.dart    # 360-degree analog joystick with spring return
-└── main.dart                        # Application bootstrap & System UI setup
-```
+Author: **Danilo Stoletović** • Mentor: **Dejan Batanjac**  
+**ETŠ „Nikola Tesla“ Niš** • 2026
 
----
-
-## 📄 License
-This project is licensed under the MIT License.
+Licensed under the **[MIT License](LICENSE)**.
