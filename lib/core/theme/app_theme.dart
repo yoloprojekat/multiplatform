@@ -18,37 +18,39 @@ class AppTheme {
         primary: AppColors.cyanAccent,
         secondary: AppColors.neonBlue,
         surface: AppColors.surface,
-        background: AppColors.background,
         error: AppColors.statusOffline,
         onPrimary: Colors.black,
         onSecondary: Colors.white,
         onSurface: AppColors.textPrimary,
-        onBackground: AppColors.textPrimary,
       ),
       textTheme: textTheme,
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.surface,
         elevation: 0,
-        shape: RoundedCornerShape(20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: AppColors.surfaceElevated,
-        shape: RoundedCornerShape(24),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
         titleTextStyle: textTheme.titleLarge?.copyWith(
           color: AppColors.textPrimary,
           fontWeight: FontWeight.bold,
         ),
       ),
       switchTheme: SwitchThemeData(
-        thumbColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return AppColors.cyanAccent;
           }
           return AppColors.textSecondary;
         }),
-        trackColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
-            return AppColors.cyanAccent.withOpacity(0.4);
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.cyanAccent.withValues(alpha: 0.4);
           }
           return AppColors.surfaceElevated;
         }),

@@ -1,0 +1,254 @@
+name: Build & Publish Multiplatform Cockpit
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # -------------------------------------------------------------
+  # Job 1: Static Analysis & Unit Tests
+  # -------------------------------------------------------------
+  analyze-and-test:
+    name: Analyze & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Static Code Analysis
+        run: flutter analyze
+
+      - name: Run Test Suite
+        run: flutter test
+
+  # -------------------------------------------------------------
+  # Job 2: Build Web (and optionally publish to GitHub Pages)
+  # -------------------------------------------------------------
+  build-web:
+    name: Build Web App
+    needs: analyze-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Flutter Web
+        run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
+
+      - name: Package Web Artifacts
+        run: |
+          cd build/web
+          zip -r ../../yolo-vozilo-web.zip .
+
+      - name: Upload Web Zip Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yolo-vozilo-web
+          path: yolo-vozilo-web.zip
+
+      - name: Deploy to GitHub Pages (Main/Tags only)
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v'))
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+
+  # -------------------------------------------------------------
+  # Job 3: Build Android APK
+  # -------------------------------------------------------------
+  build-android:
+    name: Build Android APK
+    needs: analyze-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Android Release APK
+        run: flutter build apk --release
+
+      - name: Rename APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk yolo-vozilo-android.apk
+
+      - name: Upload Android APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yolo-vozilo-android-apk
+          path: yolo-vozilo-android.apk
+
+  # -------------------------------------------------------------
+  # Job 4: Build Windows Desktop
+  # -------------------------------------------------------------
+  build-windows:
+    name: Build Windows Desktop (x64)
+    needs: analyze-and-test
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Enable Windows Desktop
+        run: flutter config --enable-windows-desktop
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Windows Desktop Release
+        run: flutter build windows --release
+
+      - name: Compress Windows Bundle
+        shell: pwsh
+        run: |
+          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath yolo-vozilo-windows-x64.zip
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yolo-vozilo-windows-x64
+          path: yolo-vozilo-windows-x64.zip
+
+  # -------------------------------------------------------------
+  # Job 5: Build Linux Desktop
+  # -------------------------------------------------------------
+  build-linux:
+    name: Build Linux Desktop (x64)
+    needs: analyze-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Linux Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Enable Linux Desktop
+        run: flutter config --enable-linux-desktop
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Linux Desktop Release
+        run: flutter build linux --release
+
+      - name: Package Linux Bundle
+        run: |
+          tar -czvf yolo-vozilo-linux-x64.tar.gz -C build/linux/x64/release/bundle .
+
+      - name: Upload Linux Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yolo-vozilo-linux-x64
+          path: yolo-vozilo-linux-x64.tar.gz
+
+  # -------------------------------------------------------------
+  # Job 6: Automatic GitHub Release on Tag
+  # -------------------------------------------------------------
+  publish-release:
+    name: Publish GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-web, build-android, build-windows, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Web Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: yolo-vozilo-web
+
+      - name: Download Android Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: yolo-vozilo-android-apk
+
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: yolo-vozilo-windows-x64
+
+      - name: Download Linux Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: yolo-vozilo-linux-x64
+
+      - name: Create GitHub Release & Attach Binaries
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            yolo-vozilo-android.apk
+            yolo-vozilo-windows-x64.zip
+            yolo-vozilo-linux-x64.tar.gz
+            yolo-vozilo-web.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
