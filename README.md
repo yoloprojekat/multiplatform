@@ -10,7 +10,7 @@ A high-performance, futuristic telemetry and remote control cockpit for smart Ra
 
 ---
 
-## ✨ Features & Enhancements
+## Features & Enhancements
 
 - 🖥️ **Cockpit Telemetry Dashboard**: High-contrast, cyberpunk HUD interface with responsive layouts that automatically adapt between desktop/tablet cockpit and thumb-friendly mobile layouts.
 - 📹 **Live MJPEG Video Feed**: Real-time camera feed parser with frame rate throttling (saving battery and bandwidth), live rolling FPS counter, and roundtrip ping latency monitor.
