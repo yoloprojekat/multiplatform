@@ -164,10 +164,43 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress
+
       - name: Build Windows Desktop Release
         run: flutter build windows --release
 
-      - name: Compress Windows Bundle
+      - name: Build Inno Setup EXE Installer
+        shell: pwsh
+        run: |
+          $Version = "${{ github.ref_name }}"
+          if ($Version -like "v*") {
+            $Version = $Version.Substring(1)
+          } else {
+            $Version = "1.0.0"
+          }
+
+          if (Test-Path "build\windows\x64\runner\Release") {
+            $buildDir = (Resolve-Path "build\windows\x64\runner\Release").Path
+          } elseif (Test-Path "build\windows\runner\Release") {
+            $buildDir = (Resolve-Path "build\windows\runner\Release").Path
+          } else {
+            throw "Windows release build output folder not found"
+          }
+
+          $isccPath = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $isccPath)) {
+            $isccPath = (Get-Command iscc -ErrorAction Stop).Source
+          }
+
+          & $isccPath "/DMyAppVersion=$Version" "/DBuildDir=$buildDir" windows\installer\yolo_vozilo_setup.iss
+          if (Test-Path "build\windows\installer\yolo-vozilo-windows-installer.exe") {
+            Copy-Item "build\windows\installer\yolo-vozilo-windows-installer.exe" -Destination "yolo-vozilo-windows-installer.exe"
+          } else {
+            throw "Installer output not found at build\windows\installer\yolo-vozilo-windows-installer.exe"
+          }
+
+      - name: Compress Windows Portable Bundle
         shell: pwsh
         run: |
           if (Test-Path "build\windows\x64\runner\Release") {
@@ -179,7 +212,13 @@ jobs:
           }
           Compress-Archive -Path $bundlePath -DestinationPath yolo-vozilo-windows-x64.zip
 
-      - name: Upload Windows Artifact
+      - name: Upload Windows Installer Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yolo-vozilo-windows-installer
+          path: yolo-vozilo-windows-installer.exe
+
+      - name: Upload Windows Portable Zip Artifact
         uses: actions/upload-artifact@v4
         with:
           name: yolo-vozilo-windows-x64
