@@ -514,31 +514,38 @@ class RobotController extends ChangeNotifier {
 
   // --- Ping Monitor ---
 
-  void _startPingMonitor() {
-    _pingTimer?.cancel();
-    _pingTimer = Timer.periodic(RobotConstants.pingCheckInterval, (timer) async {
-      if (_isSimulatorMode) {
-        _telemetry = _telemetry.copyWith(
-          connectionStatus: RobotConnectionStatus.simulated,
-          latencyMs: 3,
-        );
-        notifyListeners();
-        return;
-      }
+  Future<void> _checkPingNow() async {
+    if (_isSimulatorMode) {
+      _telemetry = _telemetry.copyWith(
+        connectionStatus: RobotConnectionStatus.simulated,
+        latencyMs: 3,
+      );
+      notifyListeners();
+      return;
+    }
 
-      final latency = await _api.measurePing();
-      if (latency != null) {
-        _telemetry = _telemetry.copyWith(
-          connectionStatus: RobotConnectionStatus.connected,
-          latencyMs: latency,
-        );
-      } else {
+    final latency = await _api.measurePing();
+    if (latency != null) {
+      _telemetry = _telemetry.copyWith(
+        connectionStatus: RobotConnectionStatus.connected,
+        latencyMs: latency,
+        lastError: null,
+      );
+    } else {
+      if (_telemetry.connectionStatus != RobotConnectionStatus.connecting) {
         _telemetry = _telemetry.copyWith(
           connectionStatus: RobotConnectionStatus.disconnected,
           latencyMs: null,
         );
       }
-      notifyListeners();
+    }
+    notifyListeners();
+  }
+
+  void _startPingMonitor() {
+    _pingTimer?.cancel();
+    _pingTimer = Timer.periodic(const Duration(milliseconds: 1800), (timer) async {
+      await _checkPingNow();
     });
   }
 

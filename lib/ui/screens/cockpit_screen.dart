@@ -573,6 +573,7 @@ class CockpitScreen extends StatelessWidget {
         onSaveHost: (newHost) => controller.updateHostUrl(newHost),
         onToggleSimulator: (val) => controller.setSimulatorMode(val),
         onInjectOcrText: (text) => controller.injectOcrResult(text),
+        onFastScan: () => controller.fastScanAndConnect(),
       ),
     );
   }

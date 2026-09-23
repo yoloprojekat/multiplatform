@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multiplatform/controllers/robot_controller.dart';
 import 'package:multiplatform/core/utils/mjpeg_decoder.dart';
 import 'package:multiplatform/data/models/robot_command.dart';
+import 'package:multiplatform/data/services/robot_api_service.dart';
 import 'package:multiplatform/ui/screens/cockpit_screen.dart';
 
 void main() {
@@ -83,6 +84,25 @@ void main() {
       expect(find.text('VIRTUAL JOYSTICK'), findsOneWidget);
 
       controller.dispose();
+    });
+  });
+
+  group('RobotApiService Fast Connection Tests', () {
+    test('fastProbeCandidates terminates quickly when candidates are empty', () async {
+      final api = RobotApiService();
+      final result = await api.fastProbeCandidates([]);
+      expect(result, isNull);
+      api.dispose();
+    });
+
+    test('updateBaseUrl formats urls consistently', () {
+      final api = RobotApiService();
+      api.updateBaseUrl('192.168.1.50:1607/');
+      expect(api.baseUrl, 'http://192.168.1.50:1607');
+
+      api.updateBaseUrl('https://custom-host.local:8080');
+      expect(api.baseUrl, 'https://custom-host.local:8080');
+      api.dispose();
     });
   });
 }

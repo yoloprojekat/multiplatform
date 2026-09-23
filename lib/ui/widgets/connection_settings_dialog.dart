@@ -13,6 +13,7 @@ class ConnectionSettingsDialog extends StatefulWidget {
     required this.onSaveHost,
     required this.onToggleSimulator,
     required this.onInjectOcrText,
+    this.onFastScan,
   });
 
   final String currentHost;
@@ -22,6 +23,7 @@ class ConnectionSettingsDialog extends StatefulWidget {
   final ValueChanged<String> onSaveHost;
   final ValueChanged<bool> onToggleSimulator;
   final ValueChanged<String> onInjectOcrText;
+  final Future<String?> Function()? onFastScan;
 
   @override
   State<ConnectionSettingsDialog> createState() =>
@@ -31,6 +33,7 @@ class ConnectionSettingsDialog extends StatefulWidget {
 class _ConnectionSettingsDialogState extends State<ConnectionSettingsDialog> {
   late TextEditingController _hostController;
   late TextEditingController _ocrTestController;
+  bool _isScanning = false;
 
   @override
   void initState() {
@@ -44,6 +47,33 @@ class _ConnectionSettingsDialogState extends State<ConnectionSettingsDialog> {
     _hostController.dispose();
     _ocrTestController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleFastScan() async {
+    if (widget.onFastScan == null) return;
+    setState(() => _isScanning = true);
+    final foundHost = await widget.onFastScan!();
+    if (!mounted) return;
+    setState(() => _isScanning = false);
+
+    if (foundHost != null) {
+      _hostController.text = foundHost;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Connected to vehicle at $foundHost!'),
+          backgroundColor: AppColors.statusOnline,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not find vehicle. Check Wi-Fi connection.'),
+          backgroundColor: AppColors.recordAlert,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   @override
@@ -157,15 +187,51 @@ class _ConnectionSettingsDialogState extends State<ConnectionSettingsDialog> {
 
               const SizedBox(height: 20),
 
-              // Server URL Field
-              const Text(
-                'ROBOT SERVER URL',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.0,
-                  color: AppColors.textSecondary,
-                ),
+              // Server URL Field Header with Fast Scan Button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'ROBOT SERVER URL',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.0,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  if (widget.onFastScan != null && !widget.isSimulatorMode)
+                    InkWell(
+                      onTap: _isScanning ? null : _handleFastScan,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.cyanAccent.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.cyanAccent.withValues(alpha: 0.4)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_isScanning) ...[
+                              const SizedBox(
+                                width: 12,
+                                height: 12,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.cyanAccent),
+                              ),
+                              const SizedBox(width: 6),
+                              const Text('SCANNING...', style: TextStyle(fontSize: 10, color: AppColors.cyanAccent, fontWeight: FontWeight.bold)),
+                            ] else ...[
+                              const Icon(Icons.bolt_rounded, size: 14, color: AppColors.cyanAccent),
+                              const SizedBox(width: 4),
+                              const Text('FAST DISCOVERY', style: TextStyle(fontSize: 10, color: AppColors.cyanAccent, fontWeight: FontWeight.bold)),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: 8),
               TextField(
@@ -201,10 +267,12 @@ class _ConnectionSettingsDialogState extends State<ConnectionSettingsDialog> {
               // Preset URL chips
               Wrap(
                 spacing: 8,
+                runSpacing: 6,
                 children: [
                   _buildPresetChip(RobotConstants.defaultHost, 'Default mDNS'),
-                  _buildPresetChip('http://localhost:1607', 'Localhost'),
+                  _buildPresetChip('http://192.168.4.1:1607', 'Robot AP'),
                   _buildPresetChip('http://192.168.1.105:1607', 'Direct IP'),
+                  _buildPresetChip('http://localhost:1607', 'Localhost'),
                 ],
               ),
 
