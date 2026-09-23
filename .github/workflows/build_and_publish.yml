@@ -16,7 +16,7 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/tags/v') }}
 
 jobs:
   # -------------------------------------------------------------
@@ -121,7 +121,19 @@ jobs:
         run: flutter build apk --release
 
       - name: Rename APK
-        run: cp build/app/outputs/flutter-apk/app-release.apk yolo-vozilo-android.apk
+        run: |
+          if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
+            cp build/app/outputs/flutter-apk/app-release.apk yolo-vozilo-android.apk
+          elif [ -f "build/app/outputs/apk/release/app-release.apk" ]; then
+            cp build/app/outputs/apk/release/app-release.apk yolo-vozilo-android.apk
+          else
+            APK_FILE=$(find build/ -name "*.apk" -type f | head -n 1)
+            if [ -n "$APK_FILE" ]; then
+              cp "$APK_FILE" yolo-vozilo-android.apk
+            else
+              echo "Error: No APK file generated" && exit 1
+            fi
+          fi
 
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
@@ -158,7 +170,14 @@ jobs:
       - name: Compress Windows Bundle
         shell: pwsh
         run: |
-          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath yolo-vozilo-windows-x64.zip
+          if (Test-Path "build\windows\x64\runner\Release") {
+            $bundlePath = "build\windows\x64\runner\Release\*"
+          } elseif (Test-Path "build\windows\runner\Release") {
+            $bundlePath = "build\windows\runner\Release\*"
+          } else {
+            throw "Windows release build output folder not found"
+          }
+          Compress-Archive -Path $bundlePath -DestinationPath yolo-vozilo-windows-x64.zip
 
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
